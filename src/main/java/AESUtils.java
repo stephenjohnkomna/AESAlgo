@@ -1,9 +1,16 @@
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.CsvToBeanBuilder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -67,17 +74,49 @@ public class AESUtils {
         return encreptData;
     }
 
-    public static void main(String[] args) {
-        String[] str=new String[]{
-                "5GI4F4LZDW5/8RoyEth8uJn+FPGVSgM8vFs="
+    public static void main(String[] args) throws IOException {
+      /*  String[] str=new String[]{
+                "qJTSurcikAKa6iQzEzrPteQ2m5fmrZFd/o4="
         };
-        decode(str);
+        decode(str);*/
+
+        String fileName = "/Users/mac/Documents/project/untitled folder/AESAlgo/src/test/encrypted-bank-account-numbers.csv";
+        List<String> accountNoList = getListOfEncryptedAccountnumber(fileName);
+        writeDecrptedAccountNumToCSVFile(accountNoList);
     }
 
-    private static void decode(String [] str){
-        for (String s:str){
-            System.out.println(s+"->"+AESUtils.decode(s));
-        }
+
+
+
+
+
+    private static void writeDecrptedAccountNumToCSVFile(List<String> lstAccountNo) throws IOException {
+        String csv = "/Users/mac/Documents/project/untitled folder/AESAlgo/src/test/Outputdata.csv";
+        CSVWriter writer = new CSVWriter(new FileWriter(csv));
+
+        //Create record
+        String [] record = lstAccountNo.toArray(new String[0]);
+        //Write the record to file
+        writer.writeNext(record);
+
+        //close the writer
+        writer.close();
+    }
+
+    private static List<String> getListOfEncryptedAccountnumber(String fileName) throws IOException {
+        List<AccountDetails> beans = new CsvToBeanBuilder(new FileReader(fileName))
+                .withType(AccountDetails.class)
+                .build()
+                .parse();
+
+        return  beans.parallelStream()
+                .map(data-> decode(data.getRecipient_bank_account_no_encrypted()))
+                .collect(Collectors.toList());
+    }
+
+    private static String decode(String [] str){
+       String result = AESUtils.decode(str);
+       return result;
     }
 
 }
